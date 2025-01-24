@@ -2,7 +2,7 @@ import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
-from tester_algos import randAlgo
+from tester_algos import smaAlgo
 
 def main():
     # Defines the risk-free rate.
@@ -13,9 +13,10 @@ def main():
     # Processes data.
     data = getStockData(ticker_sym)
 
-    data = randAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
+    data = smaAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
 
     data = calculateReturns(data)
+    data, max_drawdown=calculate_drawdown(data)
 
     # Error checker
     if data is None or data.empty:
@@ -23,7 +24,7 @@ def main():
         return
     
     stock_return, ann_return, ann_vol, sharpe_ratio = calculateStats(data, rfr)
-    output(stock_return, ann_return, ann_vol, sharpe_ratio)
+    output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown)
     plotResults(data)
 
 
@@ -60,6 +61,21 @@ def calculateStats(data, rfr):
     sharpe_ratio = (ann_return - rfr) / ann_vol
     return stock_return, ann_return, ann_vol, sharpe_ratio
 
+def calculate_drawdown(data):
+    # Calculate cumulative returns
+    data['Cumulative_Returns'] = (1 + data['Strat']).cumprod()
+    
+    # Calculate running maximum
+    data['Running_Max'] = data['Cumulative_Returns'].cummax()
+    
+    # Calculate drawdown
+    data['Drawdown'] = (data['Cumulative_Returns'] - data['Running_Max']) / data['Running_Max']
+    
+    # Calculate maximum drawdown
+    max_drawdown = data['Drawdown'].min()
+    
+    return data, max_drawdown
+
 
 # Plots the cumulative stock and strategy returns.
 def plotResults(data):
@@ -71,11 +87,12 @@ def plotResults(data):
 
 
 # Output statistics.
-def output(stock_return, ann_return, ann_vol, sharpe_ratio):
+def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown):
     print(f'Annual stock return: {np.round(stock_return*100, 3)}%')
     print(f'Annual volatility: {np.round(ann_vol*100, 3)}%')
     print(f'Annual Return: {np.round(ann_return*100, 3)}%')
     print(f'Sharpe Ratio: {sharpe_ratio}')
+    print(f'Max Drawdown: {np.round(abs(max_drawdown)*100, 3)}%')
 
 if __name__ == "__main__":
     main()

@@ -2,6 +2,7 @@ import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
+from tester_algos import smaAlgo
 
 def main():
     # Defines the risk-free rate.
@@ -11,7 +12,9 @@ def main():
 
     # Processes data.
     data = getStockData(ticker_sym)
-    data = positionAlgorithm(data)
+
+    data = smaAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
+
     data = calculateReturns(data)
 
     # Error checker

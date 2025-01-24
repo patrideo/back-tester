@@ -11,7 +11,8 @@ def main():
     ticker_sym = input("Please input your chosen stock. Use their ticker: ").upper()
 
     # Processes data.
-    data = getStockData(ticker_sym)
+    data, timeframe = getStockData(ticker_sym)
+    timeframe=int(timeframe.replace('y',''))
 
     data = smaAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
 
@@ -24,18 +25,18 @@ def main():
         return
     
     stock_return, ann_return, ann_vol, sharpe_ratio = calculateStats(data, rfr)
-    output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown)
+    output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe)
     plotResults(data)
 
 
 def getStockData(ticker_sym):
     ticker = yf.Ticker(ticker_sym)
-    timeframe=str(input("How long would you like to backtest this strategy over? Options are: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, and ytd."))
+    timeframe=str(input("How long would you like to backtest this strategy over? Options are: 1y, 2y, 5y, 10y."))
     historical_data = ticker.history(period=timeframe)
     if historical_data.empty or historical_data is None:
         print(f"No historical data found for ticker: {ticker_sym}")
         return None
-    return historical_data[['Open', 'High', 'Low', 'Close']]
+    return historical_data[['Open', 'High', 'Low', 'Close']], timeframe
 
 
 # Adds the daily proportional returns and the strategy returns to the dataframe.
@@ -87,10 +88,11 @@ def plotResults(data):
 
 
 # Output statistics.
-def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown):
+def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe):
     print(f'Annual stock return: {np.round(stock_return*100, 3)}%')
     print(f'Annual volatility: {np.round(ann_vol*100, 3)}%')
-    print(f'Annual Return: {np.round(ann_return*100, 3)}%')
+    print(f'Annual Return: {np.round(ann_return*100/timeframe, 3)}%')
+    print(f'Total Return: {np.round(ann_return*100, 3)}%')
     print(f'Sharpe Ratio: {sharpe_ratio}')
     print(f'Max Drawdown: {np.round(abs(max_drawdown)*100, 3)}%')
 

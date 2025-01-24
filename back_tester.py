@@ -2,7 +2,7 @@ import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
-from tester_algos import smaAlgo
+from tester_algos import randAlgo
 
 def main():
     # Defines the risk-free rate.
@@ -13,7 +13,7 @@ def main():
     # Processes data.
     data = getStockData(ticker_sym)
 
-    data = smaAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
+    data = randAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
 
     data = calculateReturns(data)
 
@@ -29,7 +29,7 @@ def main():
 
 def getStockData(ticker_sym):
     ticker = yf.Ticker(ticker_sym)
-    timeframe=str(input("How long would you like to backtest this strategy over? E.g. 1d, 2w, 3m, 4y"))
+    timeframe=str(input("How long would you like to backtest this strategy over? Options are: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, and ytd."))
     historical_data = ticker.history(period=timeframe)
     if historical_data.empty or historical_data is None:
         print(f"No historical data found for ticker: {ticker_sym}")
@@ -72,8 +72,6 @@ def plotResults(data):
     plt.figure(figsize=(10,6))
     plt.plot(data['Returns'].cumsum().apply(np.exp), label='Stock Returns')
     plt.plot(data['Strat'].cumsum().apply(np.exp), label='Strategy Returns')
-    plt.plot(data['SMA1']/data['Close'].iloc[0], label='SMA1')
-    plt.plot(data['SMA2']/data['Close'].iloc[0], label='SMA2')
     plt.legend(loc=0)
     plt.show()
 
@@ -84,22 +82,6 @@ def output(stock_return, ann_return, ann_vol, sharpe_ratio):
     print(f'Annual volatility: {np.round(ann_vol, 3)*100}%')
     print(f'Annual Return: {np.round(ann_return, 3)*100}%')
     print(f'Sharpe: {sharpe_ratio}')
-
-
-# Function that defines what positions to take.
-def positionAlgorithm(data):
-    data.dropna(inplace=True)
-
-    SMA1=42
-    SMA2=252
-
-    data['SMA1']=data['Close'].rolling(SMA1).mean()
-    data['SMA2']=data['Close'].rolling(SMA2).mean()
-    data['Position'] = np.where(data['SMA1']>data['SMA2'], 1, -1)
-
-    data.dropna(inplace=True)
-    return data
-
 
 
 if __name__ == "__main__":

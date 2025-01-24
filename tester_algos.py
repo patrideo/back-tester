@@ -16,6 +16,7 @@ def smaAlgo(data):
     data.dropna(inplace=True)
     return data
 
+# Randomly go long or short each day.
 def randAlgo(data):
     data['Position']=np.random.choice([1, -1], size=len(data))
     return data

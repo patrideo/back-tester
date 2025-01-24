@@ -57,13 +57,7 @@ def calculateStats(data, rfr):
     stock_return = np.exp(returns.sum())-1
     ann_return = np.exp(strat.sum())-1
     ann_vol = strat.std() * np.sqrt(len(data))
-
-    if ann_vol == 0:
-        print("Error: Annual volatility is zero.")
-        sharpe_ratio = np.nan
-    else:
-        sharpe_ratio = (ann_return - rfr) / ann_vol
-
+    sharpe_ratio = (ann_return - rfr) / ann_vol
     return stock_return, ann_return, ann_vol, sharpe_ratio
 
 
@@ -78,11 +72,10 @@ def plotResults(data):
 
 # Output statistics.
 def output(stock_return, ann_return, ann_vol, sharpe_ratio):
-    print(f'Annual stock return: {np.round(stock_return, 3)*100}%')
-    print(f'Annual volatility: {np.round(ann_vol, 3)*100}%')
-    print(f'Annual Return: {np.round(ann_return, 3)*100}%')
-    print(f'Sharpe: {sharpe_ratio}')
-
+    print(f'Annual stock return: {np.round(stock_return*100, 3)}%')
+    print(f'Annual volatility: {np.round(ann_vol*100, 3)}%')
+    print(f'Annual Return: {np.round(ann_return*100, 3)}%')
+    print(f'Sharpe Ratio: {sharpe_ratio}')
 
 if __name__ == "__main__":
     main()

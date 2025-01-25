@@ -26,8 +26,8 @@ def main():
         print("Error: Data is empty after processing.")
         return
     
-    stock_return, ann_return, ann_vol, sharpe_ratio, stock_vol = calculateStats(data, rfr)
-    output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe, stock_vol)
+    stock_return, strat_return, ann_vol, sharpe_ratio, stock_vol = calculateStats(data, rfr, timeframe)
+    output(stock_return, strat_return, ann_vol, sharpe_ratio, max_drawdown, timeframe, stock_vol)
     plotResults(data)
 
 
@@ -52,7 +52,7 @@ def calculateStrat(data):
     data.dropna(inplace=True)
     return data
 # Calculates relevant statistics.
-def calculateStats(data, rfr):
+def calculateStats(data, rfr, timeframe):
     strat = data['Strat'].values
     returns = data['Returns'].values
 
@@ -60,11 +60,11 @@ def calculateStats(data, rfr):
         print("Error: No valid data for returns or strategy.")
 
     stock_return = np.exp(returns.sum())-1
-    ann_return = np.exp(strat.sum())-1
+    strat_return = np.exp(strat.sum())-1
     ann_vol = strat.std() * np.sqrt(252)
     stock_vol = returns.std() * np.sqrt(252)
-    sharpe_ratio = (ann_return - rfr) / ann_vol
-    return stock_return, ann_return, ann_vol, sharpe_ratio, stock_vol
+    sharpe_ratio = (strat_return/timeframe - rfr) / ann_vol
+    return stock_return, strat_return, ann_vol, sharpe_ratio, stock_vol
 
 def calculate_drawdown(data):
     # Calculate cumulative returns
@@ -92,7 +92,7 @@ def plotResults(data):
     plt.show()
 
 
-def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe, stock_vol):
+def output(stock_return, strat_return, ann_vol, sharpe_ratio, max_drawdown, timeframe, stock_vol):
     stock_data = [
         ["Annual return", f"{round(stock_return * 100 / timeframe, 3)}%"],
         ["Total return", f"{round(stock_return * 100, 3)}%"],
@@ -100,8 +100,8 @@ def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timefr
     ]
 
     strategy_data = [
-        ["Annual Return", f"{round(ann_return * 100 / timeframe, 3)}%"],
-        ["Total Return", f"{round(ann_return * 100, 3)}%"],
+        ["Annual Return", f"{round(strat_return * 100 / timeframe, 3)}%"],
+        ["Total Return", f"{round(strat_return * 100, 3)}%"],
         ["Annual volatility", f"{round(ann_vol * 100, 3)}%"],
         ["Max Drawdown", f"{round(max_drawdown * 100, 3)}%"],
         ["Sharpe Ratio", f"{sharpe_ratio}"]

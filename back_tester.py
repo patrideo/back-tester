@@ -2,7 +2,8 @@ import numpy as np
 import yfinance as yf
 import matplotlib.pyplot as plt
 import pandas as pd
-from tester_algos import smaAlgo
+from tester_algos import momentAlgo
+from tabulate import tabulate 
 
 def main():
     # Defines the risk-free rate.
@@ -13,10 +14,11 @@ def main():
     # Processes data.
     data, timeframe = getStockData(ticker_sym)
     timeframe=int(timeframe.replace('y',''))
-
-    data = smaAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
-
     data = calculateReturns(data)
+
+    data = momentAlgo(data)   # Choose an algorithm you want to test here. Make sure to import the function at the top of the file.
+    data = calculateStrat(data)
+
     data, max_drawdown=calculate_drawdown(data)
 
     # Error checker
@@ -24,8 +26,8 @@ def main():
         print("Error: Data is empty after processing.")
         return
     
-    stock_return, ann_return, ann_vol, sharpe_ratio = calculateStats(data, rfr)
-    output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe)
+    stock_return, ann_return, ann_vol, sharpe_ratio, stock_vol = calculateStats(data, rfr)
+    output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe, stock_vol)
     plotResults(data)
 
 
@@ -42,12 +44,13 @@ def getStockData(ticker_sym):
 # Adds the daily proportional returns and the strategy returns to the dataframe.
 def calculateReturns(data):
     data['Returns'] = np.log(data['Close'] / data['Close'].shift(1))
-    data['Strat'] = data['Position'].shift(1) * data['Returns']
     data.dropna(inplace=True)
-
     return data
 
-
+def calculateStrat(data):
+    data['Strat'] = data['Position'].shift(1) * data['Returns']
+    data.dropna(inplace=True)
+    return data
 # Calculates relevant statistics.
 def calculateStats(data, rfr):
     strat = data['Strat'].values
@@ -58,9 +61,10 @@ def calculateStats(data, rfr):
 
     stock_return = np.exp(returns.sum())-1
     ann_return = np.exp(strat.sum())-1
-    ann_vol = strat.std() * np.sqrt(len(data))
+    ann_vol = strat.std() * np.sqrt(252)
+    stock_vol = returns.std() * np.sqrt(252)
     sharpe_ratio = (ann_return - rfr) / ann_vol
-    return stock_return, ann_return, ann_vol, sharpe_ratio
+    return stock_return, ann_return, ann_vol, sharpe_ratio, stock_vol
 
 def calculate_drawdown(data):
     # Calculate cumulative returns
@@ -73,8 +77,9 @@ def calculate_drawdown(data):
     data['Drawdown'] = (data['Cumulative_Returns'] - data['Running_Max']) / data['Running_Max']
     
     # Calculate maximum drawdown
-    max_drawdown = data['Drawdown'].min()
+    max_drawdown = max(abs(data['Drawdown']))
     
+    print(type(max_drawdown))
     return data, max_drawdown
 
 
@@ -87,14 +92,27 @@ def plotResults(data):
     plt.show()
 
 
-# Output statistics.
-def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe):
-    print(f'Annual stock return: {np.round(stock_return*100, 3)}%')
-    print(f'Annual volatility: {np.round(ann_vol*100, 3)}%')
-    print(f'Annual Return: {np.round(ann_return*100/timeframe, 3)}%')
-    print(f'Total Return: {np.round(ann_return*100, 3)}%')
-    print(f'Sharpe Ratio: {sharpe_ratio}')
-    print(f'Max Drawdown: {np.round(abs(max_drawdown)*100, 3)}%')
+def output(stock_return, ann_return, ann_vol, sharpe_ratio, max_drawdown, timeframe, stock_vol):
+    stock_data = [
+        ["Annual return", f"{round(stock_return * 100 / timeframe, 3)}%"],
+        ["Total return", f"{round(stock_return * 100, 3)}%"],
+        ["Annual volatility", f"{round(stock_vol * 100, 3)}%"],
+    ]
+
+    strategy_data = [
+        ["Annual Return", f"{round(ann_return * 100 / timeframe, 3)}%"],
+        ["Total Return", f"{round(ann_return * 100, 3)}%"],
+        ["Annual volatility", f"{round(ann_vol * 100, 3)}%"],
+        ["Max Drawdown", f"{round(max_drawdown * 100, 3)}%"],
+        ["Sharpe Ratio", f"{sharpe_ratio}"]
+    ]
+
+    print("Stock Data:")
+    print(tabulate(stock_data, headers=["Metric", "Value"], tablefmt="pretty"))
+
+    print("\nStrategy Data:")
+    print(tabulate(strategy_data, headers=["Metric", "Value"], tablefmt="pretty"))
+
 
 if __name__ == "__main__":
     main()

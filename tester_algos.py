@@ -20,17 +20,18 @@ def smaAlgo(data):
 
 # Randomly go long or short each day.
 def randAlgo(data):
-    data['Position']=np.random.choice([1, -1], size=len(data))
+    for ticker in data.columns.levels[0]:
+        data[ticker, 'Position']=np.random.choice([1, -1], size=len(data))
     return data
 
 
-# Simple momentum-based algorithm.
+# Simple lag-based algorithm.
 def momentAlgo(data):
-    lags = 3  
-    weights = [10, 2, 1] 
+    lags = 3
+    weights = [5, -2, 1,] # By experimenting with the weights, you can change the type of strategy acts as, e.g. Momentum or Mean-reversion.
 
-    # Initialize 'lag_sum' column with zeros
     data['lag_sum'] = np.zeros_like(data['Returns'])
+    # Initialize 'lag_sum' column with zeros
 
     # Calculate weighted sum of lagged returns
     for lag in range(1, lags + 1):
@@ -40,3 +41,4 @@ def momentAlgo(data):
     data['Position'] = np.where(data['lag_sum'] > 0, 1, -1)
     
     return data
+

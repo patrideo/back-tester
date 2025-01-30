@@ -107,7 +107,7 @@ def calculateStats(data, rfr, timeframe):
         stats.append([ticker, stock_return, strat_return, ann_vol, sharpe_ratio, stock_vol, max_drawdown])
 
     # # Calculate combined stats for all stocks in the strategy
-    # combined_strat = data.xs('Strat', level=1, axis=1).sum(axis=1)      #FIX THIS BULLSHIT
+    # combined_strat = data.xs('Strat', level=1, axis=1).sum(axis=1)      #FIX THIS 
     # combined_returns = data.xs('Returns', level=1, axis=1).sum(axis=1)
 
     # combined_stock_return = np.exp(combined_returns.sum()) - 1

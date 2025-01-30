@@ -6,14 +6,13 @@ import pandas as pd
 def smaAlgo(data):     
     data.dropna(inplace=True)
 
-    SMA1=42
-    SMA2=252
+    SMA1=40
+    SMA2=100
 
-
-    data['SMA1']=data['Close'].rolling(SMA1).mean()
-    data['SMA2']=data['Close'].rolling(SMA2).mean()
-    data['Position'] = np.where(data['SMA1']>data['SMA2'], 1, -1)
-
+    for ticker in data.columns.levels[0]:
+        data[ticker, 'SMA1']=data[ticker, 'Close'].rolling(SMA1).mean()
+        data[ticker, 'SMA2']=data[ticker, 'Close'].rolling(SMA2).mean()
+        data[ticker, 'Position'] = np.where(data[ticker, 'SMA1']>data[ticker, 'SMA2'], 1, -1)
     data.dropna(inplace=True)
     return data
 

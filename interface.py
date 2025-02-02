@@ -4,6 +4,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 from back_tester import main
 
+# Set High-DPI awareness (for Windows)
+try:
+    from ctypes import windll
+    windll.shcore.SetProcessDpiAwareness(1)
+except ImportError:
+    pass
+
 # Available strategies
 strategies = {
     "Simple Moving Average": "smaAlgo",
@@ -24,21 +31,30 @@ def start_backtest():
         if strategy_function_name is None:
             raise ValueError("Selected strategy not found.")
 
-        # Clear the output screen
-        output_text.delete(1.0, tk.END)
+        # # Clear the output screen
+        # output_text.delete(1.0, tk.END)
         
         # Clear the previous plot
         for widget in plot_frame.winfo_children():
             widget.destroy()
         
         # Call the backtest with the selected strategy
-        main(tickers, timeframe, rfr, strategy_function_name, output_text, plot_frame, tree)
+        main(tickers, timeframe, rfr, strategy_function_name, plot_frame, tree)
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
 # Create the main window
 root = tk.Tk()
 root.title("Algotrading Backtester")
+
+# Set the window size (resolution)
+window_width = 1000
+window_height = 600
+root.geometry(f"{window_width}x{window_height}")
+
+# Create a style for the Treeview
+style = ttk.Style()
+style.configure("Treeview", rowheight=30)  # Set the desired row height
 
 # Create a frame for the input fields and buttons
 input_frame = tk.Frame(root)
@@ -62,31 +78,43 @@ strategy_dropdown.current(0)  # Set default value
 start_button = tk.Button(input_frame, text="Start Backtest", command=start_backtest)
 start_button.grid(row=3, columnspan=2, pady=10)
 
-# Create a Text widget for output display
-output_text = Text(root, wrap='word', height=5, width=80)
-output_text.pack(expand=True, pady=10)
+# # Create a Text widget for output display
+# output_text = Text(root, wrap='word', height=5, width=80)
+# output_text.pack(expand=True, pady=10)
 
-# Add a scrollbar to the Text widget
-scrollbar = Scrollbar(root, command=output_text.yview)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-output_text['yscrollcommand'] = scrollbar.set
+# # Add a scrollbar to the Text widget
+# scrollbar = Scrollbar(root, command=output_text.yview)
+# scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+# output_text['yscrollcommand'] = scrollbar.set
+
+# Create a frame for the Treeview and its scrollbar
+tree_frame = tk.Frame(root, width=900, height=300)  # Fixed size for the frame
+tree_frame.pack_propagate(False)  # Prevent frame from resizing
+tree_frame.pack(pady=10)
 
 # Create a Treeview widget for tabular output
-tree = ttk.Treeview(root, columns=("Metric", "Value"), show="headings", height=5)
-tree.heading("Metric", text="Metric")
-tree.heading("Value", text="Value")
-tree.column("Metric", width=300)
-tree.column("Value", width=300)
-tree.pack(expand=True, pady=10)
+tree = ttk.Treeview(tree_frame, columns=("Metric", "Value"), show="tree headings", height=10, style="Treeview")  # Fixed height for Treeview
+tree.heading("#0", text="Ticker", anchor='w')
+tree.column("#0", width=150, stretch=tk.YES)
+tree.heading("Metric", text="Metric", anchor='w')
+tree.heading("Value", text="Value", anchor='w')
+tree.column("Metric", width=200, anchor='w')
+tree.column("Value", width=150, anchor='w')
+tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 # Add a scrollbar to the Treeview
-tree_scrollbar = Scrollbar(root, orient="vertical", command=tree.yview)
+tree_scrollbar = Scrollbar(tree_frame, orient="vertical", command=tree.yview)
 tree_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 tree.configure(yscrollcommand=tree_scrollbar.set)
+
 
 # Create a frame for the plot
 plot_frame = tk.Frame(root)
 plot_frame.pack(expand=True, pady=10)
+
+
+
+
 
 # Run the GUI loop
 root.mainloop()

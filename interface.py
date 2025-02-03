@@ -15,6 +15,7 @@ except ImportError:
 strategies = {
     "Simple Moving Average": "smaAlgo",
     "Random Daily Position": "randAlgo",
+    "Lag Based Algorithm": "lagAlgo",
     # Add other strategies here
     # "Another Strategy": "anotherAlgo",
 }

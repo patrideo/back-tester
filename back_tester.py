@@ -3,21 +3,18 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
-from tester_algos import smaAlgo
-from tester_algos import randAlgo
+from tester_algos import smaAlgo,randAlgo, lagAlgo
 import tkinter as tk
 
 # Function dictionary for strategies
 strategy_functions = {
     "smaAlgo": smaAlgo,
     "randAlgo": randAlgo,
+    "lagAlgo": lagAlgo
     # Add other strategies here
-    # "anotherAlgo": anotherAlgo,
 }
 
 def main(tickers, timeframe, rfr, strategy, plot_frame, tree):
-    # Defines the risk-free rate.
-    # Retrieves the users stock of choice.
     tickers=tickers.upper()
 
     # Processes data.
@@ -37,7 +34,6 @@ def main(tickers, timeframe, rfr, strategy, plot_frame, tree):
     data,combined_strat  = combineStrategyReturns(data)
 
     stats, data = calculateStats(data, rfr, timeframe, combined_strat)
-
     output(stats, tree, timeframe)
     plotResults(data, plot_frame)
 

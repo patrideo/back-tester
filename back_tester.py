@@ -3,14 +3,16 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
-from tester_algos import smaAlgo,randAlgo, lagAlgo
+from tester_algos import smaAlgo,randAlgo, lagAlgo, rsiAlgo, macdAlgo
 import tkinter as tk
 
 # Function dictionary for strategies
 strategy_functions = {
     "smaAlgo": smaAlgo,
     "randAlgo": randAlgo,
-    "lagAlgo": lagAlgo
+    "lagAlgo": lagAlgo,
+    "rsiAlgo": rsiAlgo,
+    "macdAlgo": macdAlgo,
     # Add other strategies here
 }
 
@@ -35,6 +37,8 @@ def main(tickers, timeframe, rfr, strategy, plot_frame, tree):
 
     stats, data = calculateStats(data, rfr, timeframe, combined_strat, timeframe2)
     output(stats, tree, timeframe)
+    print(data)
+
     plotResults(data, plot_frame)
 
 def convert_to_years(timeframe):
@@ -117,7 +121,7 @@ def calculateStats(data, rfr, timeframe, combined_strat, timeframe2):
             strat_return = np.exp(strat.sum()) - 1
             timeframe_vol = strat.std() * np.sqrt(252*timeframe2)
             stock_vol = returns.std() * np.sqrt(252)
-            sharpe_ratio = (strat_return - rfr) / timeframe_vol
+            sharpe_ratio = (strat_return - rfr*timeframe2) / timeframe_vol
 
             # Calculate drawdown
             data[(ticker, 'Cumulative_Returns')] = (1 + data[(ticker, 'Strat')]).cumprod()
@@ -133,7 +137,7 @@ def calculateStats(data, rfr, timeframe, combined_strat, timeframe2):
     combined_stock_return = np.exp(combined_strat.sum()) - 1
     combined_strat_return = np.exp(combined_strat.sum()) - 1
     combined_timeframe_vol = combined_strat.std() * np.sqrt(252*timeframe2)
-    combined_sharpe_ratio = (combined_strat_return - rfr) / combined_timeframe_vol
+    combined_sharpe_ratio = (combined_strat_return - rfr*timeframe2) / combined_timeframe_vol
 
     combined_cumulative_returns = (1 + combined_strat).cumprod()
     combined_running_max = combined_cumulative_returns.cummax()
@@ -178,6 +182,8 @@ def plotResults(data, plot_frame):
     # Plot the combined strategy cumulative returns if it exists
     if ('Combined', 'Cumulative_Returns') in data.columns:
         ax.plot(data[('Combined', 'Cumulative_Returns')], label='Combined Strategy Returns')
+
+    #ax.plot(data[('AAPL', 'MACD')], linewidth=0.5, label='MACD')
 
     ax.legend(loc='upper left')
     ax.set_title("Stock and Strategy Returns")

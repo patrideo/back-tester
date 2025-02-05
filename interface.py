@@ -16,6 +16,8 @@ strategies = {
     "Simple Moving Average": "smaAlgo",
     "Random Daily Position": "randAlgo",
     "Lag Based Algorithm": "lagAlgo",
+    "Relative Strength Index (RSI)": "rsiAlgo",
+    "Moving Average Convergence Divergence (MACD)": "macdAlgo",
     # Add other strategies here
     # "Another Strategy": "anotherAlgo",
 }

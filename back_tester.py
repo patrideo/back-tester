@@ -5,6 +5,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
 from tester_algos import smaAlgo,randAlgo, lagAlgo, rsiAlgo, macdAlgo
 import tkinter as tk
+from datetime import datetime
 
 # Function dictionary for strategies
 strategy_functions = {
@@ -16,12 +17,14 @@ strategy_functions = {
     # Add other strategies here
 }
 
-def main(tickers, timeframe, rfr, strategy, plot_frame, tree):
+def main(tickers, starter, ender, rfr, strategy, plot_frame, tree, interval):
     tickers=tickers.upper()
-    timeframe2=convert_to_years(timeframe)
+    timeframe=convert_to_timeframe(starter, ender)
+    #timeframe2=convert_to_years(timeframe)
 
     # Processes data.
-    data = getMultiStockData(tickers, timeframe)
+    data = getMultiStockData(tickers, starter, ender, interval)
+    tickers=tickers.split(" ")
     data = calculateReturns(data)
 
 
@@ -35,11 +38,22 @@ def main(tickers, timeframe, rfr, strategy, plot_frame, tree):
     
     data, combined_strat  = combineStrategyReturns(data)
 
-    stats, data = calculateStats(data, rfr, timeframe, combined_strat, timeframe2)
-    output(stats, tree, timeframe)
-    print(data)
+    stats, data = calculateStats(data, rfr, timeframe, combined_strat)
+    output(stats, tree, timeframe, starter, ender)
 
     plotResults(data, plot_frame)
+
+def convert_to_timeframe(starter, ender):
+    d1 = datetime.strptime(starter, "%Y-%m-%d")
+    d2 = datetime.strptime(ender, "%Y-%m-%d")
+    
+    days_diff = (d2 - d1).days
+    
+    years_diff = days_diff / 365.25  # Considering leap years
+    
+    return years_diff
+
+
 
 def convert_to_years(timeframe):
     total_years = 0.0
@@ -68,22 +82,25 @@ def convert_to_years(timeframe):
 
 
 
-def getMultiStockData(tickers, timeframe):
-    data = {}
-    tickers = tickers.split(", ")
+def getMultiStockData(tickers, starter, ender, interval):
+    # data = {}
+    # tickers = tickers.split(", ")
     
-    for tick in tickers:
-        ticker = yf.Ticker(tick)
-        historical_data = ticker.history(period=timeframe)
-        if historical_data.empty or historical_data is None:
-            print(f"No historical data found for {tick}")
-        else:
-            data[tick] = historical_data[['Open', 'High', 'Low', 'Close']]
+    # for tick in tickers:
+    #     ticker = yf.Ticker(tick)
+    #     historical_data = ticker.history(period=timeframe)
+    #     if historical_data.empty or historical_data is None:
+    #         print(f"No historical data found for {tick}")
+    #     else:
+    #         data[tick] = historical_data[['Open', 'High', 'Low', 'Close']]
     
-    if not data:
+    data=yf.download(tickers, start=starter, end=ender, group_by='tickers', interval=interval)
+
+    if data.empty:
         raise ValueError("No valid data retrieved for any ticker.")
     
-    data = pd.concat(data, axis=1, keys=data.keys())
+    #data = pd.concat(data, axis=1, keys=data.keys())
+    print(data)
     return data
 
 
@@ -106,7 +123,7 @@ def calculateStrat(data, strategy):
     return data
 
 
-def calculateStats(data, rfr, timeframe, combined_strat, timeframe2):
+def calculateStats(data, rfr, timeframe, combined_strat):
     stats = []
 
     for ticker in data.columns.levels[0]:
@@ -119,9 +136,9 @@ def calculateStats(data, rfr, timeframe, combined_strat, timeframe2):
 
             stock_return = np.exp(returns.sum()) - 1
             strat_return = np.exp(strat.sum()) - 1
-            timeframe_vol = strat.std() * np.sqrt(252*timeframe2)
+            timeframe_vol = strat.std() * np.sqrt(252*timeframe)
             stock_vol = returns.std() * np.sqrt(252)
-            sharpe_ratio = (strat_return - rfr*timeframe2) / timeframe_vol
+            sharpe_ratio = (strat_return - rfr*timeframe) / timeframe_vol
 
             # Calculate drawdown
             data[(ticker, 'Cumulative_Returns')] = (1 + data[(ticker, 'Strat')]).cumprod()
@@ -136,8 +153,9 @@ def calculateStats(data, rfr, timeframe, combined_strat, timeframe2):
 
     combined_stock_return = np.exp(combined_strat.sum()) - 1
     combined_strat_return = np.exp(combined_strat.sum()) - 1
-    combined_timeframe_vol = combined_strat.std() * np.sqrt(252*timeframe2)
-    combined_sharpe_ratio = (combined_strat_return - rfr*timeframe2) / combined_timeframe_vol
+    combined_timeframe_vol = combined_strat.std() * np.sqrt(252*timeframe)
+    combined_annual_vol = combined_strat.std() * np.sqrt(252)
+    combined_sharpe_ratio = (combined_strat_return/timeframe - rfr) / combined_annual_vol
 
     combined_cumulative_returns = (1 + combined_strat).cumprod()
     combined_running_max = combined_cumulative_returns.cummax()
@@ -198,7 +216,7 @@ def plotResults(data, plot_frame):
 
 
 
-def output(stats,tree, timeframe):
+def output(stats,tree, timeframe, starter, ender):
     # Clear the existing rows in the tree
     for row in tree.get_children():
         tree.delete(row)
@@ -217,10 +235,10 @@ def output(stats,tree, timeframe):
         ticker_id = tree.insert('', 'end', text=f"Stock: {ticker}", open=True)
 
         # Insert stats under the ticker subheading
-        tree.insert(ticker_id, 'end', values=(f"Stock Return Over {timeframe} (%)", f"{stock_return * 100:.2f}"))
+        tree.insert(ticker_id, 'end', values=(f"Stock Return between {starter} and {ender}(%)", f"{stock_return * 100:.2f}"))
         tree.insert(ticker_id, 'end', values=("Stock Volatility (%)", f"{stock_vol * 100:.2f}"))
-        tree.insert(ticker_id, 'end', values=(f"Strategy Return on Stock Over {timeframe} (%)", f"{strat_return * 100:.2f}"))
-        tree.insert(ticker_id, 'end', values=(f"{timeframe} Strategy Volatility (%)", f"{timeframe_vol * 100:.2f}"))
+        tree.insert(ticker_id, 'end', values=(f"Strategy Return on Stock between {starter} and {ender} (%)", f"{strat_return * 100:.2f}"))
+        tree.insert(ticker_id, 'end', values=(f"Strategy Volatility between {starter} and {ender} (%)", f"{timeframe_vol * 100:.2f}"))
         tree.insert(ticker_id, 'end', values=("Sharpe Ratio", f"{sharpe_ratio:.2f}"))
         tree.insert(ticker_id, 'end', values=("Max Drawdown (%)", f"{max_drawdown * 100:.2f}"))
 
@@ -237,8 +255,8 @@ def output(stats,tree, timeframe):
     strategy_id = tree.insert('', 'end', text="Combined Strategy", open=True)
 
     # Insert combined stats under the strategy subheading
-    tree.insert(strategy_id, 'end', values=(f"Combined Strategy Return Over {timeframe} (%)", f"{combined_strat_return * 100:.2f}"))
-    tree.insert(strategy_id, 'end', values=(f"{timeframe} Volatility (%)", f"{combined_timeframe_vol * 100:.2f}"))
+    tree.insert(strategy_id, 'end', values=(f"Combined Strategy Return between {starter} and {ender} (%)", f"{combined_strat_return * 100:.2f}"))
+    tree.insert(strategy_id, 'end', values=(f"Strategy Volatility between {starter} and {ender}(%)", f"{combined_timeframe_vol * 100:.2f}"))
     tree.insert(strategy_id, 'end', values=("Sharpe Ratio", f"{combined_sharpe_ratio:.2f}"))
     tree.insert(strategy_id, 'end', values=("Max Drawdown (%)", f"{combined_max_drawdown * 100:.2f}"))
     if combined_avg_drawdown is not None:

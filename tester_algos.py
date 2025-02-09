@@ -84,4 +84,5 @@ def macdAlgo(data, fast_period=12, slow_period=26, signal_period=9):
 
         # Forward fill positions to hold until next signal
         data[(ticker, 'Position')].fillna(method='ffill', inplace=True)
+        data[(ticker, 'Position')] = data[(ticker, 'Position')].shift(1)
     return data

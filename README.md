@@ -16,10 +16,4 @@ This is a Python project designed to simulate and evaluate the performance of tr
 
 * GUI Integration: Integrates with Tkinter for a graphical user interface.
 
-## Usage 
 
-* Load Data: Import your historical market data from Yahoo Finance using the specified tickers, start date, end date, and interval.
-
-* Define Strategy: Implement your trading strategy in the tester_algos.py file and add it to the strategy_functions dictionary in the main script.
-
-* Run Back-Test: Execute the back-testing script using the following command:

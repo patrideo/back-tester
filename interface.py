@@ -14,10 +14,11 @@ except ImportError:
 # Available strategies
 strategies = {
     "Simple Moving Average": "smaAlgo",
-    "Random Daily Position": "randAlgo",
+    "Random Position": "randAlgo",
     "Lag Based Algorithm": "lagAlgo",
     "Relative Strength Index (RSI)": "rsiAlgo",
     "Moving Average Convergence Divergence (MACD)": "macdAlgo",
+    "ARIMA Based Strategy": "arimaModel", 
     # Add other strategies here
     # "Another Strategy": "anotherAlgo",
 }
@@ -45,7 +46,7 @@ def start_backtest():
     selected_strategy = strategy_var.get()
     selected_interval = interval_var.get()
 
-    rfr = 0.045
+    rfr = 0.045 # Set risk free rate.
     interval_time=interval_opt.get(selected_interval)
     try:
         # Get the strategy function name
@@ -70,8 +71,8 @@ root = tk.Tk()
 root.title("Algotrading Backtester")
 
 # Set the window size (resolution)
-window_width = 1500
-window_height = 700
+window_width = 1700
+window_height = 1200
 root.geometry(f"{window_width}x{window_height}")
 
 # Create a style for the Treeview
@@ -130,8 +131,8 @@ tree.heading("#0", text="Ticker", anchor='w')
 tree.column("#0", width=150, stretch=tk.YES)
 tree.heading("Metric", text="Metric", anchor='w')
 tree.heading("Value", text="Value", anchor='w')
-tree.column("Metric", width=250, anchor='w')
-tree.column("Value", width=150, anchor='w')
+tree.column("Metric", width=300, anchor='w')
+tree.column("Value", width=75, anchor='w')
 tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
 # Add a scrollbar to the Treeview

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-
+import statsmodels as sm
+from statsmodels.tsa.stattools import adfuller, acf, pacf
 
 # A Simple Moving Average Strategy
 def smaAlgo(data):     
@@ -86,3 +87,14 @@ def macdAlgo(data, fast_period=12, slow_period=26, signal_period=9):
         data[(ticker, 'Position')].fillna(method='ffill', inplace=True)
         data[(ticker, 'Position')] = data[(ticker, 'Position')].shift(1)
     return data
+
+def arimaModel(data):
+    for ticker in data.columns.levels[0]:
+        series = data[(ticker, 'Close')]
+
+        result = adfuller(series)
+        print('ADF Statistic:', result[0])
+        print('p-value:', result[1])
+        
+        # model = sm.tsa.ARIMA(series, order=(p, d, q))
+    

@@ -3,7 +3,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
-from tester_algos import smaAlgo,randAlgo, lagAlgo, rsiAlgo, macdAlgo
+from tester_algos import smaAlgo,randAlgo, lagAlgo, rsiAlgo, macdAlgo, arimaModel
 import tkinter as tk
 from datetime import datetime
 
@@ -14,6 +14,7 @@ strategy_functions = {
     "lagAlgo": lagAlgo,
     "rsiAlgo": rsiAlgo,
     "macdAlgo": macdAlgo,
+    "arimaModel": arimaModel,
     # Add other strategies here
 }
 
@@ -100,7 +101,6 @@ def getMultiStockData(tickers, starter, ender, interval):
         raise ValueError("No valid data retrieved for any ticker.")
     
     #data = pd.concat(data, axis=1, keys=data.keys())
-    print(data)
     return data
 
 
@@ -191,7 +191,8 @@ def combineStrategyReturns(data):
 
 # Plots the cumulative stock and strategy returns.
 def plotResults(data, plot_frame):
-    fig, ax = plt.subplots(figsize=(12, 6))
+    plt.close()
+    fig, ax = plt.subplots(figsize=(10, 6))
     for ticker in data.columns.levels[0]:
         if ticker == 'Combined':
             continue
@@ -262,9 +263,3 @@ def output(stats,tree, timeframe, starter, ender):
     if combined_avg_drawdown is not None:
         tree.insert(strategy_id, 'end', values=("Average Drawdown (%)", f"{combined_avg_drawdown * 100:.2f}"))
 
-
-
-
-
-if __name__ == "__main__":
-    main()

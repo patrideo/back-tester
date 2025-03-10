@@ -17,3 +17,5 @@ This is a Python project designed to simulate and evaluate the performance of tr
 * GUI Integration: Integrates with Tkinter for a graphical user interface.
 
 
+https://github.com/user-attachments/assets/53529e96-19d7-4c0b-8e15-fc9cb157a3bd
+
